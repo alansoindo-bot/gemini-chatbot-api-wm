@@ -5,17 +5,48 @@
 
 // Configuration
 const API_ENDPOINT = '/api/chat';
-const THINKING_MESSAGE = 'Thinking...';
-const ERROR_MESSAGE = 'Failed to get response from server.';
-const NO_RESPONSE_MESSAGE = 'Sorry, no response received.';
+const THINKING_MESSAGE = 'Sedang Mengetik...';
+const ERROR_MESSAGE = 'Gagal mendapatkan respon server.';
+const NO_RESPONSE_MESSAGE = 'Maaf, tidak ada respon yang diterima.';
 
 // DOM Elements
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
 const chatBox = document.getElementById('chat-box');
+const themeToggle = document.getElementById('theme-toggle');
+
+// Persisted theme key
+const THEME_KEY = 'site-theme';
 
 // Conversation history
 let conversationHistory = [];
+
+/**
+ * Format model response into readable HTML sections
+ * @param {string} text - Raw response text
+ * @returns {string} HTML formatted response
+ */
+function formatModelResponse(text) {
+  let html = text;
+  
+  // Replace bold text: **text** → <strong>text</strong>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Replace numbered lists: 1. → <li>1. ... </li>
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  
+  // Wrap consecutive list items in <ul>
+  html = html.replace(/(<li>.*?<\/li>\s*)+/g, '<ul class="response-list">$&</ul>');
+  
+  // Replace paragraph breaks
+  html = html.replace(/\n\n+/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+  
+  // Replace single line breaks with <br> (but not within tags)
+  html = html.replace(/(?<!<[^>]*)\n(?![^<]*>)/g, '<br>');
+  
+  return html;
+}
 
 /**
  * Add a message to the chat box
@@ -27,7 +58,12 @@ let conversationHistory = [];
 function addMessageToChat(message, role, id = '') {
   const messageElement = document.createElement('div');
   messageElement.className = `message ${role}`;
-  messageElement.textContent = message;
+  
+  if (role === 'model') {
+    messageElement.innerHTML = formatModelResponse(message);
+  } else {
+    messageElement.textContent = message;
+  }
   
   if (id) {
     messageElement.id = id;
@@ -47,7 +83,11 @@ function addMessageToChat(message, role, id = '') {
 function updateMessage(id, newMessage) {
   const messageElement = document.getElementById(id);
   if (messageElement) {
-    messageElement.textContent = newMessage;
+    if (messageElement.classList.contains('model')) {
+      messageElement.innerHTML = formatModelResponse(newMessage);
+    } else {
+      messageElement.textContent = newMessage;
+    }
     chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to bottom
   }
 }
@@ -154,6 +194,7 @@ async function handleFormSubmit(event) {
 function initializeChatbot() {
   chatForm.addEventListener('submit', handleFormSubmit);
   userInput.focus();
+  setupThemeToggle();
 }
 
 // Start the chatbot when DOM is ready
@@ -161,4 +202,33 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeChatbot);
 } else {
   initializeChatbot();
+}
+
+/**
+ * Theme toggle setup and persistence
+ */
+function setupThemeToggle() {
+  if (!themeToggle) return;
+  const label = themeToggle.querySelector('.label');
+
+  // Apply saved theme
+  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  applyTheme(saved);
+
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem(THEME_KEY, next);
+  });
+
+  function applyTheme(mode) {
+    if (mode === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (label) label.textContent = 'Dark';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (label) label.textContent = 'Light';
+    }
+  }
 }

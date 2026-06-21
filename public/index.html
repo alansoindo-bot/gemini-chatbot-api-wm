@@ -3,16 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gemini AI Chatbot</title>
+  <title>Website Maker Chatbot</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <div class="container">
-    <h1>Gemini AI Chatbot</h1>
+    <div class="header-bar">
+      <div class="brand">
+        <span class="logo">WM</span>
+        <span class="brand-text">Website Maker Chatbot</span>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="dot"></span>
+        <span class="label">Dark</span>
+      </button>
+    </div>
     <div id="chat-box" class="chat-box"></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off" required />
-      <button type="submit">Send</button>
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="user-input" placeholder="Apa yang ingin Anda Ketahui..." autocomplete="off" required />
+      <button type="submit" class="send-button">Kirim</button>
     </form>
   </div>
   <script src="script.js"></script>
